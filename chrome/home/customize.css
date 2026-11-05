@@ -1,0 +1,160 @@
+:root {
+  color-scheme: dark;
+  background: var(--nyx-bg, #000);
+  color: var(--nyx-text, #ededed);
+  font: 14px -apple-system, "Helvetica Neue", sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  box-sizing: border-box;
+  max-width: 760px;
+  margin-inline: auto;
+  padding: 48px 32px 72px;
+}
+
+h1 {
+  margin: 0 0 32px;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+h2 {
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+section {
+  padding-block: 22px;
+  border-top: 1px solid var(--nyx-border, #333);
+}
+
+.hint {
+  margin: -6px 0 14px;
+  color: var(--nyx-muted, #a8a8a8);
+}
+
+.error {
+  margin: 12px 0 0;
+  color: #ff8a80;
+}
+
+.error:empty {
+  display: none;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.option,
+.icon-button {
+  appearance: none;
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+  color: var(--nyx-text, #ededed);
+  font: inherit;
+  transition: background-color var(--nyx-speed, 160ms) ease-out;
+}
+
+.option:hover,
+.icon-button:hover {
+  background: var(--nyx-hover, #2a2a2a);
+}
+
+.option[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--nyx-tab-selected-fill, #d8d8d8);
+  color: var(--nyx-tab-selected-text, #0a0a0a);
+}
+
+.option:focus-visible,
+.icon-button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--nyx-accent, #d8d8d8);
+  outline-offset: 2px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px 24px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+}
+
+.grid + .row {
+  margin-top: 12px;
+}
+
+input[type="color"] {
+  flex: none;
+  width: 36px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--nyx-border, #333);
+  background: none;
+}
+
+.spaced {
+  margin-top: 12px;
+}
+
+.options[aria-disabled="true"] {
+  opacity: 0.45;
+}
+
+input.number {
+  width: 64px;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+  color: var(--nyx-text, #ededed);
+  font: inherit;
+}
+
+input[type="checkbox"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--nyx-accent, #d8d8d8);
+}
+
+.icon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+}
+
+.icon-row > span {
+  flex: 1;
+  min-width: 0;
+}
+
+.icon-preview {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.icon-button {
+  flex: none;
+  min-height: 28px;
+  padding: 0 10px;
+}

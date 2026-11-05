@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; img-src chrome: data:; object-src 'none'" />
+    <title>Кастомизация</title>
+    <link rel="icon" href="chrome://branding/content/icon32.png" />
+    <link rel="stylesheet" href="chrome://nyx/content/customize.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Кастомизация</h1>
+
+      <section>
+        <h2>Тема</h2>
+        <div id="presets" class="options"></div>
+      </section>
+
+      <section>
+        <h2>Цвета</h2>
+        <div id="colors" class="grid"></div>
+        <label class="row">
+          <input id="metal" type="checkbox" />
+          <span>Металлические иконки и активная вкладка</span>
+        </label>
+      </section>
+
+      <section>
+        <h2>Вкладки</h2>
+        <div id="tabs" class="options"></div>
+      </section>
+
+      <section>
+        <h2>Автоочистка вкладок</h2>
+        <p class="hint">Закреплённые, текущая и вкладки со звуком не закрываются. Вернуть закрытую: ⌘⇧T.</p>
+        <label class="row">
+          <input id="tab-cleanup" type="checkbox" />
+          <span>Закрывать вкладки, которые долго не открывались</span>
+        </label>
+        <div id="cleanup-hours" class="options spaced"></div>
+        <label class="row spaced">
+          <input id="tab-warning" type="checkbox" />
+          <span>Предупреждать, когда вкладок больше</span>
+          <input id="tab-limit" class="number" type="number" min="5" max="500" step="1" aria-label="Порог вкладок" />
+        </label>
+      </section>
+
+      <section>
+        <h2>Обновления</h2>
+        <p class="hint">Раз в день NYX проверяет на GitHub, вышла ли новая версия. Больше ничего не отправляется.</p>
+        <label class="row">
+          <input id="update-check" type="checkbox" />
+          <span>Сообщать о новых версиях</span>
+        </label>
+      </section>
+
+      <section>
+        <h2>Набор иконок</h2>
+        <div id="packs" class="options"></div>
+      </section>
+
+      <section>
+        <h2>Свои иконки</h2>
+        <p class="hint">SVG или PNG, до 256 КБ. Своя иконка важнее набора.</p>
+        <div id="icons" class="grid"></div>
+        <p id="icon-error" class="error" role="alert"></p>
+      </section>
+
+      <section>
+        <h2>Анимации</h2>
+        <label class="row">
+          <input id="animations" type="checkbox" />
+          <span>Плавные переходы интерфейса</span>
+        </label>
+      </section>
+
+      <button id="reset" class="option" type="button">Сбросить всё</button>
+    </main>
+    <script src="chrome://nyx/content/customize.js"></script>
+  </body>
+</html>

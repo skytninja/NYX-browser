@@ -1,0 +1,78 @@
+{
+  "policies": {
+    "DisableAppUpdate": true,
+    "DisableSystemAddonUpdate": true,
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisableRemoteImprovements": true,
+    "DisableFeedbackCommands": true,
+    "DisableAccounts": true,
+    "DisableFirefoxAccounts": true,
+    "DisablePocket": true,
+    "DontCheckDefaultBrowser": true,
+    "NoDefaultBookmarks": true,
+    "IPProtectionAvailable": false,
+    "SkipTermsOfUse": true,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "SearchSuggestEnabled": false,
+    "BrowserDataBackup": false,
+    "FirefoxHome": {
+      "Search": false,
+      "Weather": false,
+      "TopSites": false,
+      "SponsoredTopSites": false,
+      "Highlights": false,
+      "Pocket": false,
+      "Stories": false,
+      "SponsoredPocket": false,
+      "SponsoredStories": false,
+      "Snippets": false,
+      "Widgets": false,
+      "Locked": true
+    },
+    "FirefoxSuggest": {
+      "WebSuggestions": false,
+      "SponsoredSuggestions": false,
+      "ImproveSuggest": false,
+      "OnlineEnabled": false,
+      "Locked": true
+    },
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "SkipOnboarding": true,
+      "MoreFromMozilla": false,
+      "FirefoxLabs": false,
+      "Locked": true
+    },
+    "GenerativeAI": {
+      "Enabled": false,
+      "Locked": true
+    },
+    "AIControls": {
+      "Default": { "Value": "blocked", "Locked": true },
+      "Translations": { "Value": "available", "Locked": false }
+    },
+    "SearchEngines": {
+      "Default": "DuckDuckGo",
+      "DefaultPrivate": "DuckDuckGo",
+      "PreventInstalls": true,
+      "Remove": ["Google", "Bing", "Amazon.com", "eBay", "Wikipedia (en)", "Perplexity", "Yandex", "Mail.ru"]
+    },
+    "DNSOverHTTPS": {
+      "Enabled": true,
+      "ProviderURL": "https://dns.adguard-dns.com/dns-query",
+      "Fallback": false,
+      "Locked": true
+    },
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "installation_mode": "force_installed",
+        "install_url": "file:///Applications/NYX%20Browser.app/Contents/Resources/distribution/extensions/uBlock0@raymondhill.net.xpi"
+      }
+    }
+  }
+}

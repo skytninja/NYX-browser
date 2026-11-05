@@ -1,0 +1,70 @@
+/* NYX theme tokens. Appended to tokens-platform.css and tokens-brand.css, so settings and about: pages get them too.
+   Values below are the "liquid silver" defaults; NyxTheme.sys.mjs overrides the --nyx-* ones at runtime. */
+:root,
+:host {
+  --nyx-bg: #000000;
+  --nyx-toolbar: #1a1a1a;
+  --nyx-surface: #101010;
+  --nyx-hover: #2a2a2a;
+  --nyx-border: #333333;
+  --nyx-text: #ededed;
+  --nyx-muted: #a8a8a8;
+  --nyx-accent: #d8d8d8;
+  --nyx-icon: #d8d8d8;
+
+  --color-accent-primary: var(--nyx-accent);
+  --color-accent-primary-hover: var(--nyx-text);
+  --color-accent-primary-active: var(--nyx-muted);
+  --color-accent-primary-selected: var(--nyx-muted);
+  --focus-outline-color: var(--nyx-accent);
+  --text-color: var(--nyx-text);
+  --text-color-deemphasized: var(--nyx-muted);
+  --link-color: var(--nyx-accent);
+  --link-color-hover: var(--nyx-text);
+  --link-color-active: var(--nyx-muted);
+
+  /* !important: common-shared.css sets this again for settings and about: pages. */
+  --background-color-canvas: var(--nyx-bg) !important;
+  --background-color-box: var(--nyx-surface);
+  --background-color-box-info: var(--nyx-hover);
+  --border-color: var(--nyx-border);
+  --border-color-deemphasized: var(--nyx-border);
+  --border-color-interactive: var(--nyx-border);
+
+  --button-background-color: var(--nyx-hover);
+  --button-background-color-hover: var(--nyx-border);
+  --button-background-color-active: var(--nyx-border);
+  --button-background-color-primary: var(--nyx-accent);
+  --button-background-color-primary-hover: var(--nyx-text);
+  --button-background-color-primary-active: var(--nyx-muted);
+  --button-text-color: var(--nyx-text);
+  --button-text-color-primary: var(--nyx-bg);
+  --button-text-color-primary-hover: var(--nyx-bg);
+  --button-text-color-primary-active: var(--nyx-bg);
+  --button-border-color: transparent;
+
+  --info-bar-border-color: var(--nyx-border);
+  --input-background-color: var(--nyx-surface);
+  --popup-background-color: var(--nyx-surface);
+  --panel-background-color: var(--nyx-surface);
+  --panel-border-color: var(--nyx-border);
+  --panel-text-color: var(--nyx-text);
+  --sidebar-border-color: var(--nyx-border);
+
+  --toolbox-background-color: var(--nyx-toolbar);
+  --toolbox-background-color-inactive: var(--nyx-toolbar);
+  --toolbox-background-gradient: image(transparent);
+  --toolbar-background-color: transparent;
+  --toolbar-text-color: var(--nyx-text);
+  --toolbar-field-background-color: var(--nyx-surface);
+  --toolbar-field-background-color-focus: var(--nyx-surface);
+  --toolbar-field-border-color: transparent;
+  --toolbar-field-border-color-focus: var(--nyx-border);
+  --toolbar-field-text-color: var(--nyx-text);
+  --toolbar-field-text-color-focus: var(--nyx-text);
+  --toolbarbutton-background-color-hover: var(--nyx-hover);
+  --toolbarbutton-background-color-active: var(--nyx-border);
+  --toolbarbutton-icon-fill: var(--nyx-icon);
+  --toolbarbutton-icon-fill-attention: var(--nyx-accent);
+  --chrome-content-separator-color: var(--nyx-border);
+}

@@ -1,0 +1,290 @@
+:root {
+  color-scheme: dark;
+  --bg: #000;
+  --surface: #0c0c0e;
+  --border: #26272b;
+  --text: #ededed;
+  --muted: #9c9ea4;
+  --metal: linear-gradient(180deg, #fff 0%, #c4c6cc 50%, #70737b 100%);
+  --metal-flat: linear-gradient(135deg, #f4f4f4 0%, #c8c8c8 22%, #8c8c8c 40%, #efefef 55%, #b4b4b4 75%, #dcdcdc 100%);
+  --hex: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  --gutter: clamp(16px, 5vw, 48px);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  color: var(--text);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(60% 40% at 50% 0%, rgb(255 255 255 / 0.07), transparent 70%),
+    var(--bg);
+  background-repeat: no-repeat;
+  overflow-x: hidden;
+}
+
+html {
+  background: var(--bg);
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.top,
+main,
+.bottom {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-block: 22px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.top-link {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 160ms ease-out;
+}
+
+.top-link:hover {
+  color: var(--text);
+}
+
+.hero {
+  padding-block: clamp(48px, 10vw, 112px) 48px;
+  text-align: center;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(44px, 9vw, 96px);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.metal {
+  background: var(--metal);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lead {
+  max-width: 36em;
+  margin: 28px auto 0;
+  color: var(--muted);
+  font-size: clamp(17px, 2.2vw, 20px);
+  text-wrap: pretty;
+}
+
+.cta {
+  margin-top: 40px;
+}
+
+.button {
+  display: inline-block;
+  padding: 15px 30px;
+  background: var(--metal-flat);
+  color: #0a0a0a;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.3) inset, 0 10px 40px rgb(255 255 255 / 0.12);
+  transition: transform 160ms ease-out, box-shadow 160ms ease-out;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5) inset, 0 14px 48px rgb(255 255 255 / 0.2);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #d8d8d8;
+  outline-offset: 4px;
+}
+
+.meta {
+  margin: 14px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.shot {
+  margin: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 0 0 1px #3a3b40, 0 40px 120px rgb(0 0 0 / 0.9), 0 0 120px rgb(255 255 255 / 0.06);
+}
+
+.shot img {
+  width: 100%;
+  background: var(--bg);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1px;
+  margin-block: clamp(64px, 10vw, 120px);
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.features article {
+  padding: 32px 28px;
+  background: var(--bg);
+  transition: background-color 160ms ease-out;
+}
+
+.features article:hover {
+  background: var(--surface);
+}
+
+.hex {
+  display: block;
+  width: 26px;
+  height: 30px;
+  clip-path: var(--hex);
+  background: var(--metal);
+}
+
+.features h2 {
+  margin: 20px 0 8px;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.features p {
+  margin: 0;
+  color: var(--muted);
+  text-wrap: pretty;
+}
+
+.install {
+  max-width: 720px;
+  margin: 0 auto clamp(64px, 10vw, 120px);
+}
+
+.install h2 {
+  margin: 0 0 28px;
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.02em;
+}
+
+.install ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.install li {
+  position: relative;
+  padding: 0 0 26px 56px;
+  color: var(--muted);
+  counter-increment: step;
+}
+
+.install li::before {
+  content: counter(step);
+  position: absolute;
+  top: -2px;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 38px;
+  clip-path: var(--hex);
+  background: var(--metal);
+  color: #0a0a0a;
+  font-weight: 700;
+}
+
+.install strong {
+  color: var(--text);
+}
+
+code {
+  padding: 1px 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font: 14px ui-monospace, Menlo, monospace;
+}
+
+.checksum {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.checksum[hidden] {
+  display: none;
+}
+
+.hash {
+  display: block;
+  margin-top: 6px;
+  padding: 8px 10px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.note {
+  margin: 8px 0 0;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding-block: 28px 40px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.bottom p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}

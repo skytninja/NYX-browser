@@ -1,0 +1,282 @@
+:root {
+  color-scheme: dark;
+  --hex: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  --speed: var(--nyx-speed, 160ms);
+  font: 13px -apple-system, "Helvetica Neue", sans-serif;
+  color: var(--nyx-text, #ededed);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--nyx-bg, #000);
+}
+
+#viewport {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  animation: viewport-in var(--speed) ease-out;
+}
+
+#viewport.panning {
+  cursor: grabbing;
+}
+
+#world {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+body.closing #world {
+  transition: transform calc(var(--speed) * 1.4) ease-in;
+}
+
+body.closing #viewport {
+  opacity: 0;
+  transition: opacity calc(var(--speed) * 1.4) ease-in;
+}
+
+.tile {
+  position: absolute;
+  width: 240px;
+  height: 277px;
+  clip-path: var(--hex);
+  background: var(--nyx-border, #333);
+  transition: background-color var(--speed) ease-out, transform var(--speed) ease-out;
+}
+
+.tile:hover,
+.tile:focus-within {
+  background: var(--nyx-accent, #d8d8d8);
+}
+
+.tile.active {
+  background: var(--nyx-tab-selected-fill, #d8d8d8);
+}
+
+.tile.dragging {
+  z-index: 10;
+  transition: none;
+  transform: scale(1.04);
+  cursor: grabbing;
+}
+
+.tile-open {
+  all: unset;
+  position: absolute;
+  inset: 3px;
+  overflow: hidden;
+  clip-path: var(--hex);
+  background: var(--nyx-surface, #101010);
+}
+
+.tile-open:focus-visible {
+  outline: none;
+}
+
+.tile-shot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  opacity: 0;
+  transition: opacity var(--speed) ease-out;
+}
+
+.tile-shot.ready {
+  opacity: 1;
+}
+
+.tile-info {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 44px 34px 46px;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.88) 45%);
+}
+
+.tile-icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  color: var(--nyx-accent, #d8d8d8);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tile-icon img {
+  width: 100%;
+  height: 100%;
+}
+
+.tile-title {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--nyx-text, #ededed);
+}
+
+.tile-close {
+  all: unset;
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  background: rgb(0 0 0 / 0.72);
+  color: var(--nyx-text, #ededed);
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity var(--speed) ease-out;
+}
+
+.tile:hover .tile-close,
+.tile:focus-within .tile-close {
+  opacity: 1;
+}
+
+.tile-close:hover,
+.tile-close:focus-visible {
+  background: var(--nyx-accent, #d8d8d8);
+  color: #0a0a0a;
+}
+
+.tile-new .tile-open {
+  display: grid;
+  place-items: center;
+  color: var(--nyx-accent, #d8d8d8);
+  font-size: 40px;
+  font-weight: 200;
+}
+
+#hint {
+  position: fixed;
+  right: 0;
+  bottom: 18px;
+  left: 0;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 6px 12px;
+  background: var(--nyx-bg, #000);
+  color: var(--nyx-muted, #a8a8a8);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+#spaces {
+  position: fixed;
+  /* Below the macOS window buttons. */
+  top: 44px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+#spaces > * {
+  pointer-events: auto;
+}
+
+.space {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+}
+
+.space-open,
+.space-remove,
+.space-action {
+  all: unset;
+  min-height: 32px;
+  padding: 0 12px;
+  line-height: 32px;
+  cursor: pointer;
+  transition: background-color var(--speed) ease-out;
+}
+
+.space-new {
+  border: 1px dashed var(--nyx-border, #333);
+  color: var(--nyx-muted, #a8a8a8);
+}
+
+.space-open:hover,
+.space-remove:hover,
+.space-action:hover {
+  background: var(--nyx-hover, #2a2a2a);
+}
+
+.space-open[aria-current="true"] {
+  background: var(--nyx-tab-selected-fill, #d8d8d8);
+  color: var(--nyx-tab-selected-text, #0a0a0a);
+}
+
+.space-remove {
+  padding: 0 10px;
+  color: var(--nyx-muted, #a8a8a8);
+}
+
+.space-confirm {
+  gap: 4px;
+  padding-left: 12px;
+}
+
+.space-open:focus-visible,
+.space-remove:focus-visible,
+.space-action:focus-visible,
+.space-input:focus-visible {
+  outline: 2px solid var(--nyx-accent, #d8d8d8);
+  outline-offset: 2px;
+}
+
+.space-input {
+  width: 180px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--nyx-accent, #d8d8d8);
+  background: var(--nyx-surface, #101010);
+  color: var(--nyx-text, #ededed);
+  font: inherit;
+}
+
+.space-error {
+  padding: 6px 10px;
+  background: var(--nyx-bg, #000);
+  color: #ff8a80;
+}
+
+@keyframes viewport-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --speed: 0ms;
+  }
+}

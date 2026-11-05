@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NYX Browser</title>
+    <meta name="description" content="NYX Browser: браузер для macOS на движке Firefox. Без телеметрии и рекламы, с сотами вместо списка вкладок и изолированными пространствами." />
+    <meta property="og:title" content="NYX Browser" />
+    <meta property="og:description" content="Браузер для macOS на движке Firefox. Без телеметрии и рекламы." />
+    <meta property="og:image" content="img/screenshot.png" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="icon" href="img/favicon.png" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="#">
+        <img src="img/logo.svg" alt="" width="32" height="32" />
+        <span>NYX Browser</span>
+      </a>
+      <a class="top-link" href="https://github.com/skytninja/NYX-browser">GitHub</a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <h1>Браузер<br /><span class="metal">без лишнего</span></h1>
+        <p class="lead">
+          Движок Firefox, но без слежки, рекламы и мусора в интерфейсе.
+          Вкладки в сотах, отдельные пространства и тема, которую можно перекрасить целиком.
+        </p>
+        <div class="cta">
+          <a class="button" id="download-button" href="https://github.com/skytninja/NYX-browser/releases/latest">
+            Скачать для macOS
+          </a>
+          <p class="meta" id="download-meta">macOS 10.15 и новее · Apple Silicon и Intel</p>
+        </div>
+      </section>
+
+      <figure class="shot">
+        <img src="img/screenshot.png" alt="NYX Browser: обзор вкладок сотами" width="1600" height="1000" />
+      </figure>
+
+      <section class="features" aria-label="Возможности">
+        <article>
+          <span class="hex" aria-hidden="true"></span>
+          <h2>Ничего не собирает</h2>
+          <p>Телеметрия, исследования и отчёты выключены и заблокированы. Их не включить обратно случайно.</p>
+        </article>
+        <article>
+          <span class="hex" aria-hidden="true"></span>
+          <h2>Без рекламы</h2>
+          <p>uBlock Origin встроен и не отключается. DNS идёт по HTTPS через AdGuard и режет трекеры ещё до загрузки.</p>
+        </article>
+        <article>
+          <span class="hex" aria-hidden="true"></span>
+          <h2>Соты</h2>
+          <p>Все вкладки шестиугольниками на бесконечном поле. Перетаскивай, группируй, закрывай. Открываются по ⌥Tab.</p>
+        </article>
+        <article>
+          <span class="hex" aria-hidden="true"></span>
+          <h2>Пространства</h2>
+          <p>Работа, учёба, личное: у каждого своя история, куки и вкладки. Ничего не пересекается.</p>
+        </article>
+        <article>
+          <span class="hex" aria-hidden="true"></span>
+          <h2>Сам наводит порядок</h2>
+          <p>Закрывает вкладки, которые ты давно не открывал, и предупреждает, когда их слишком много.</p>
+        </article>
+        <article>
+          <span class="hex" aria-hidden="true"></span>
+          <h2>Твой интерфейс</h2>
+          <p>Любые цвета и иконки, вкладки сверху или слева. По умолчанию — жидкое серебро на чёрном.</p>
+        </article>
+      </section>
+
+      <section class="install" id="download">
+        <h2>Установка и обновление</h2>
+        <ol>
+          <li>
+            <strong>Скачай</strong> файл <code>.dmg</code> по кнопке выше и открой его.
+            <span class="checksum" id="checksum" hidden>
+              Убедиться, что файл настоящий: команда <code>shasum -a 256 ~/Downloads/NYX-Browser-*.dmg</code>
+              в Терминале должна вывести <code class="hash" id="sha256"></code>
+            </span>
+          </li>
+          <li>
+            <strong>Перетащи</strong> NYX Browser в «Программы». При обновлении согласись заменить старую версию.
+            Вкладки, пароли и настройки хранятся отдельно и останутся на месте.
+          </li>
+          <li>
+            <strong>Разреши запуск.</strong> NYX пока не подписан сертификатом Apple, поэтому при первом запуске macOS его остановит.
+            Открой «Системные настройки» → «Конфиденциальность и безопасность» и нажми «Всё равно открыть».
+          </li>
+        </ol>
+        <p class="note">Когда выйдет новая версия, NYX сам покажет об этом полоску сверху.</p>
+      </section>
+    </main>
+
+    <footer class="bottom">
+      <p>NYX Browser основан на Mozilla Firefox и не связан с Mozilla.</p>
+      <p><a href="https://github.com/skytninja/NYX-browser/releases">Все версии</a></p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

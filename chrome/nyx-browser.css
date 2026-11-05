@@ -1,0 +1,134 @@
+/* NYX browser window. Appended to browser-shared.css. */
+
+:root {
+  --nyx-toolbar-fill: linear-gradient(180deg, #1a1a1a, #000);
+  --nyx-tab-selected-fill: linear-gradient(135deg, #f4f4f4 0%, #c8c8c8 22%, #8c8c8c 40%, #efefef 55%, #b4b4b4 75%, #dcdcdc 100%);
+  --nyx-tab-selected-text: #0a0a0a;
+  --nyx-icon-filter: url("chrome://nyx/content/metal.svg#metal");
+  --nyx-extension-filter: grayscale(1) brightness(1.25);
+  --nyx-speed: 160ms;
+
+  --tab-border-radius: 0;
+  --tab-margin-block: 0;
+  --tab-margin-block-vertical: 0;
+  --tab-border-color: transparent;
+  --tab-border-color-hover: transparent;
+  --tab-border-color-selected: transparent;
+  --tab-border-color-selected-leading: transparent;
+  --tab-border-color-selected-trailing: transparent;
+  --tab-border-color-accent: none;
+  --tab-box-shadow-selected: none;
+  --tab-background-color: transparent;
+  --tab-background-color-hover: var(--nyx-hover);
+  --tab-text-color: var(--nyx-muted);
+  --tab-text-color-hover: var(--nyx-text);
+  --tab-text-color-selected: var(--nyx-tab-selected-text);
+  --tab-icon-fill-loading: var(--nyx-accent);
+  --tabpanel-background-color: var(--nyx-bg);
+}
+
+/* Rectangular tabs: no rounding, outline, gradient border, shadow or gaps. */
+.tab-background {
+  border: 0 !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  transition: background-color var(--nyx-speed) ease-out;
+}
+
+:root[theme-in-app] .tab-background[selected]:not([multiselected]),
+.tab-background:is([selected], [multiselected]) {
+  background: var(--nyx-tab-selected-fill) !important;
+}
+
+.tabbrowser-tab {
+  padding-inline: 0 !important;
+}
+
+.tabbrowser-tab > .tab-stack {
+  margin: 0 !important;
+}
+
+.tab-close-button {
+  background: transparent !important;
+  border-radius: 0 !important;
+  outline: none !important;
+}
+
+/* The close icon follows the tab text, so it stays visible on the silver tab. */
+.tabbrowser-tab[selected] .tab-close-button {
+  color: var(--nyx-tab-selected-text) !important;
+  fill: var(--nyx-tab-selected-text) !important;
+}
+
+
+#navigator-toolbox {
+  background: var(--nyx-toolbar-fill) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#TabsToolbar,
+#tabbrowser-tabs,
+#nav-bar {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+#sidebar-container {
+  background: var(--nyx-toolbar) !important;
+}
+
+/* Liquid-metal toolbar icons. */
+#navigator-toolbox .toolbarbutton-icon {
+  filter: var(--nyx-icon-filter);
+}
+
+#navigator-toolbox .webextension-browser-action .toolbarbutton-icon {
+  filter: var(--nyx-extension-filter);
+}
+
+/* Honeycomb tab overview, covers the whole window. */
+#nyx-hive-button {
+  list-style-image: url("chrome://nyx/content/icons/hive.svg");
+}
+
+#nyx-hive-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* Smooth interface. Only colors and opacity change, so nothing forces a relayout. */
+.toolbarbutton-1 > .toolbarbutton-icon,
+.subviewbutton,
+#urlbar-background {
+  transition: background-color var(--nyx-speed) ease-out, opacity var(--nyx-speed) ease-out;
+}
+
+/* Junk from the toolbar and menus. */
+#fxa-toolbar-menu-button,
+#firefox-view-button,
+#alltabs-button,
+#sidebar-button,
+#ipprotection-button,
+#ai-window-splitter,
+#ai-window-box,
+.searchmode-switcher,
+#appMenu-fxa-status2,
+#appMenu-fxa-separator,
+#appMenu-fxa-sign-in-promo,
+#appMenu-referrals-button,
+#appMenu-referrals-separator,
+#appMenu-new-ai-window-button,
+#appMenu-new-ai-window-badge,
+#appMenu-chats-history-button,
+#appMenu-profiles-button,
+#appMenu-help-button2 {
+  display: none !important;
+}

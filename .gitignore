@@ -1,0 +1,6 @@
+dist/
+.cache/
+.build/
+.DS_Store
+# Personal notes for Claude: kept local, not published.
+CLAUDE.md
