@@ -2,5 +2,7 @@
   "version": "1.0.0",
   "firefox": "159.0",
   "date": "2026-11-06",
-  "dmg": "https://github.com/skytninja/NYX-browser/releases/download/v1.0.0/NYX-Browser-1.0.0.dmg"
+  "dmg": "https://github.com/skytninja/NYX-browser/releases/download/v1.0.0/NYX-Browser-1.0.0.dmg",
+  "size": 237359160,
+  "sha256": "3b9169ca33e7b39c2aee2f899a0a9ee0df2675cb9b36bf424bd1a8d9b48f6ebf"
 }
