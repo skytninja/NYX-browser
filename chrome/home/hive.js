@@ -17,7 +17,19 @@ const SHOT_WIDTH = 480;
 const SHOT_CONCURRENCY = 3;
 const CLOSE_DELAY_MS = 220;
 const POSITION_KEY = "nyx-hive";
-const TAB_EVENTS = ["TabOpen", "TabClose", "TabPinned", "TabUnpinned", "TabAttrModified"];
+const IS_WINDOWS = Services.appinfo.OS === "WINNT";
+// The key that opened the overview also closes it: ⌥Tab on macOS, Ctrl+Space on Windows.
+const isHiveKey = event => IS_WINDOWS ? event.ctrlKey && event.code === "Space" : event.altKey && event.key === "Tab";
+const HEAVY_BYTES = 500 * 1024 * 1024;
+const { tabUrl } = ChromeUtils.importESModule("chrome://nyx/content/NyxTabs.sys.mjs");
+const { NyxSnooze, snoozeChoices } = ChromeUtils.importESModule("chrome://nyx/content/NyxSnooze.sys.mjs");
+const TAB_EVENTS = ["TabOpen", "TabClose", "TabPinned", "TabUnpinned", "TabAttrModified",
+  "TabGrouped", "TabUngrouped", "TabGroupUpdate", "TabGroupRemoved"];
+// Firefox's own tab group colors, so groups look the same here and in the tab strip.
+const GROUP_COLORS = {
+  blue: "#4a90ff", purple: "#b07cff", cyan: "#3fd6e8", orange: "#ff9a3c", yellow: "#ffd23f",
+  pink: "#ff6fb5", green: "#4cd07a", gray: "#9a9a9a", red: "#ff5f57",
+};
 // Walks a ring's six edges, starting from its (-radius, radius) corner.
 const RING_DIRECTIONS = [[0, -1], [1, -1], [1, 0], [0, 1], [-1, 1], [-1, 0]];
 const KEY_MOVES = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
@@ -178,6 +190,12 @@ function fillTileText(tile, tab) {
   tile.querySelector(".tile-title").textContent = tab.label;
   tile.querySelector(".tile-open").setAttribute("aria-label", tab.label);
   tile.classList.toggle("active", tab === gBrowser.selectedTab);
+  tile.classList.toggle("asleep", tab.hasAttribute("pending"));
+  tile.classList.toggle("picked", picked.has(tab));
+  const groupColor = GROUP_COLORS[tab.group?.color];
+  tile.classList.toggle("grouped", Boolean(groupColor));
+  if (groupColor) tile.style.setProperty("--group", groupColor);
+  else tile.style.removeProperty("--group");
 
   const icon = tile.querySelector(".tile-icon");
   const source = gBrowser.getIcon(tab);
@@ -216,7 +234,9 @@ function createTile(tab) {
   icon.className = "tile-icon";
   const title = document.createElement("span");
   title.className = "tile-title";
-  info.append(icon, title);
+  const memory = document.createElement("span");
+  memory.className = "tile-memory";
+  info.append(icon, title, memory);
   open.append(shot, info);
 
   const closeButton = document.createElement("button");
@@ -228,7 +248,16 @@ function createTile(tab) {
   closeButton.addEventListener("pointerdown", event => event.stopPropagation());
   closeButton.addEventListener("click", () => closeTab(tab));
 
-  tile.append(open, closeButton);
+  const snoozeButton = document.createElement("button");
+  snoozeButton.type = "button";
+  snoozeButton.className = "tile-snooze";
+  snoozeButton.textContent = "☾";
+  snoozeButton.setAttribute("aria-label", "Отложить вкладку");
+  snoozeButton.title = "Отложить";
+  snoozeButton.addEventListener("pointerdown", event => event.stopPropagation());
+  snoozeButton.addEventListener("click", () => askSnooze([tab], `Отложить «${tab.label}»`));
+
+  tile.append(open, closeButton, snoozeButton);
   attachTileDrag(tile, tab);
   open.addEventListener("keydown", event => {
     if (event.key === "Delete" || event.key === "Backspace") {
@@ -290,6 +319,9 @@ function render() {
   }
   placeTile(newTabTile, firstFreeHex(taken));
   world.append(newTabTile);
+  applySearch();
+  renderClusters();
+  scheduleMemory();
   takeShots();
 }
 
@@ -331,7 +363,7 @@ function attachTileDrag(tile, tab) {
   let dragging = false;
 
   tile.addEventListener("pointerdown", event => {
-    if (event.button !== 0 || event.target.closest(".tile-close")) return;
+    if (event.button !== 0 || event.target.closest(".tile-close, .tile-snooze")) return;
     event.stopPropagation();
     start = { x: event.clientX, y: event.clientY };
     dragging = false;
@@ -352,7 +384,10 @@ function attachTileDrag(tile, tab) {
     if (!start) return;
     start = null;
     if (!dragging) {
-      if (event.type === "pointerup") openTab(tab);
+      if (event.type === "pointerup") {
+        if (event.shiftKey) togglePick(tab);
+        else openTab(tab);
+      }
       return;
     }
     dragging = false;
@@ -448,10 +483,239 @@ function moveFocus(dq, dr) {
   if (best) focusTab(best);
 }
 
+// Memory of each tab's process. Tabs of one site share a process, so they split its memory.
+const formatMegabytes = bytes => `${Math.max(1, Math.round(bytes / 1024 / 1024))} МБ`;
+
+async function showMemory() {
+  const info = await ChromeUtils.requestProcInfo();
+  const memoryByPid = new Map(info.children.map(child => [child.pid, child.memory]));
+  const pidOf = tab => tab.linkedBrowser.browsingContext?.currentWindowGlobal?.osPid;
+  const tabsByPid = new Map();
+  for (const tab of tiles.keys()) {
+    const pid = pidOf(tab);
+    if (memoryByPid.has(pid)) tabsByPid.set(pid, (tabsByPid.get(pid) ?? 0) + 1);
+  }
+  for (const [tab, tile] of tiles) {
+    const badge = tile.querySelector(".tile-memory");
+    const pid = pidOf(tab);
+    if (tab.hasAttribute("pending")) {
+      badge.textContent = "спит";
+      badge.title = "Выгружена из памяти. Загрузится, когда откроешь.";
+      tile.classList.remove("heavy");
+    } else if (memoryByPid.has(pid)) {
+      const shared = tabsByPid.get(pid);
+      const bytes = memoryByPid.get(pid) / shared;
+      badge.textContent = `≈ ${formatMegabytes(bytes)}`;
+      badge.title = shared > 1 ? `Процесс сайта на ${shared} вкладки: ${formatMegabytes(memoryByPid.get(pid))}` : "";
+      tile.classList.toggle("heavy", bytes >= HEAVY_BYTES);
+    } else {
+      // Browser pages (home, settings) live in the main process.
+      badge.textContent = "";
+      tile.classList.remove("heavy");
+    }
+  }
+}
+
+// Pages report changes many times while loading: measure at most every couple of seconds.
+let memoryTimer = 0;
+function scheduleMemory() {
+  memoryTimer ||= setTimeout(() => {
+    memoryTimer = 0;
+    if (!closing) showMemory().catch(console.error);
+  }, 300);
+}
+
+// A small dialog in the middle of the overview: snoozing, group actions.
+const dialog = document.getElementById("snooze");
+
+function closeDialog() {
+  dialog.hidden = true;
+  dialog.replaceChildren();
+}
+
+function showDialog(headingText, buttons) {
+  const heading = document.createElement("p");
+  heading.className = "snooze-title";
+  heading.textContent = headingText;
+  dialog.replaceChildren(heading, ...buttons, spaceButton("Отмена", "space-action snooze-choice", closeDialog));
+  dialog.hidden = false;
+  dialog.querySelector("button").focus();
+  return heading;
+}
+
+// Snooze: the tabs close now and come back by themselves at the chosen time. Only sites can.
+function askSnooze(tabs, title) {
+  const webTabs = tabs.filter(tab => /^https?:\/\//.test(tabUrl(browserWindow, tab) ?? ""));
+  if (!webTabs.length) {
+    showDialog(title, [Object.assign(document.createElement("p"), { className: "snooze-note", textContent: "Отложить можно только сайты." })]);
+    return;
+  }
+  const heading = showDialog(title, snoozeChoices().map(({ label, until }) =>
+    spaceButton(label, "space-action snooze-choice", async () => {
+      try {
+        for (const tab of webTabs) await NyxSnooze.add({ url: tabUrl(browserWindow, tab), title: tab.label }, until);
+        closeDialog();
+        if (webTabs.length === 1) closeTab(webTabs[0]);
+        else gBrowser.removeTabs(webTabs, { animate: false });
+        renderSide().catch(console.error);
+      } catch (error) {
+        console.error("NYX: can't snooze", error);
+        heading.textContent = "Не получилось отложить.";
+      }
+    })
+  ));
+}
+
+// Clusters: Firefox tab groups, shown as colored hexagons with a label above them.
+// ⇧-click picks tiles, the bar at the bottom turns the picked ones into a group.
+const picked = new Set();
+const groupBar = document.getElementById("group-bar");
+const clusterLabels = new Map(); // group -> label element
+let groupColor = "blue";
+
+function togglePick(tab) {
+  if (tab.pinned) return;
+  if (picked.has(tab)) picked.delete(tab);
+  else picked.add(tab);
+  render();
+  renderGroupBar();
+}
+
+function clearPicks() {
+  picked.clear();
+  render();
+  renderGroupBar();
+}
+
+// Pulls the tabs next to the first one. Hexes taken by other tabs are skipped, never stolen.
+function gather(tabs) {
+  if (tabs.length < 2) return;
+  const members = new Set(tabs);
+  const anchor = positions.get(tabs[0]);
+  const owner = new Map([...positions].map(([tab, hex]) => [hexKey(hex), tab]));
+  const targets = [];
+  for (const offset of spiral()) {
+    const hex = { q: anchor.q + offset.q, r: anchor.r + offset.r };
+    const who = owner.get(hexKey(hex));
+    if (!who || members.has(who)) targets.push(hex);
+    if (targets.length === tabs.length) break;
+  }
+  const targetKeys = new Set(targets.map(hexKey));
+  const staying = new Set(tabs.filter(tab => targetKeys.has(hexKey(positions.get(tab)))));
+  const taken = new Set([...staying].map(tab => hexKey(positions.get(tab))));
+  const free = targets.filter(hex => !taken.has(hexKey(hex)));
+  tabs.filter(tab => !staying.has(tab)).forEach((tab, index) => savePosition(tab, free[index]));
+}
+
+function createGroup(label) {
+  const tabs = currentTabs().filter(tab => picked.has(tab) && !tab.pinned);
+  if (!tabs.length) return;
+  const group = gBrowser.addTabGroup(tabs, { label, color: groupColor, insertBefore: tabs[0] });
+  if (group) {
+    // Set again in case this Firefox ignores the options.
+    group.label = label;
+    group.color = groupColor;
+  }
+  picked.clear();
+  gather(tabs);
+  render();
+  renderGroupBar();
+}
+
+function renderGroupBar() {
+  if (!picked.size) {
+    groupBar.hidden = true;
+    groupBar.replaceChildren();
+    hint.hidden = !searchInput.hidden;
+    return;
+  }
+  hint.hidden = true;
+  groupBar.hidden = false;
+  const count = document.createElement("span");
+  count.className = "group-count";
+  count.textContent = `Выбрано: ${picked.size}`;
+  const name = document.createElement("input");
+  name.className = "space-input";
+  name.maxLength = 40;
+  name.placeholder = "Название группы";
+  name.setAttribute("aria-label", "Название группы");
+  name.addEventListener("keydown", event => {
+    event.stopPropagation();
+    if (event.key === "Enter") createGroup(name.value.trim());
+    if (event.key === "Escape") clearPicks();
+  });
+  const colors = Object.entries(GROUP_COLORS).map(([key, value]) => {
+    const swatch = spaceButton("", "space-swatch", () => {
+      groupColor = key;
+      for (const each of groupBar.querySelectorAll(".space-swatch")) each.setAttribute("aria-pressed", String(each === swatch));
+    }, `Цвет группы: ${key}`);
+    swatch.style.setProperty("--swatch", value);
+    swatch.setAttribute("aria-pressed", String(key === groupColor));
+    return swatch;
+  });
+  groupBar.replaceChildren(count, name, ...colors,
+    spaceButton("Сгруппировать", "space-action", () => createGroup(name.value.trim())),
+    spaceButton("Отмена", "space-action", clearPicks));
+}
+
+function clusterActions(group) {
+  const tabs = group.tabs.filter(tab => tiles.has(tab));
+  const title = group.label || "Группа без названия";
+  showDialog(`«${title}» · ${tabs.length}`, [
+    spaceButton("Собрать рядом", "space-action snooze-choice", () => {
+      closeDialog();
+      gather(tabs);
+      render();
+    }),
+    spaceButton("Отложить группу", "space-action snooze-choice", () => askSnooze(tabs, `Отложить «${title}»`)),
+    spaceButton("Разгруппировать", "space-action snooze-choice", () => {
+      closeDialog();
+      group.ungroupTabs();
+    }),
+    spaceButton("Закрыть группу", "space-action snooze-choice", () => {
+      closeDialog();
+      // Closed groups come back with ⌘⇧T, like closed tabs.
+      gBrowser.removeTabGroup(group);
+    }),
+  ]);
+}
+
+// A label floats above each group, centered over its top row.
+function renderClusters() {
+  const groups = new Map();
+  for (const tab of tiles.keys()) {
+    if (tab.group) groups.set(tab.group, [...(groups.get(tab.group) ?? []), tab]);
+  }
+  for (const [group, label] of clusterLabels) {
+    if (!groups.has(group)) {
+      label.remove();
+      clusterLabels.delete(group);
+    }
+  }
+  for (const [group, tabs] of groups) {
+    let label = clusterLabels.get(group);
+    if (!label) {
+      label = spaceButton("", "cluster-label", () => clusterActions(group));
+      label.addEventListener("pointerdown", event => event.stopPropagation());
+      clusterLabels.set(group, label);
+      world.append(label);
+    }
+    const centers = tabs.map(tab => hexCenter(positions.get(tab)));
+    const top = Math.min(...centers.map(center => center.y));
+    const row = centers.filter(center => center.y === top);
+    const x = row.reduce((sum, center) => sum + center.x, 0) / row.length;
+    label.style.left = `${x}px`;
+    label.style.top = `${top - HEX_HEIGHT / 2 - 18}px`;
+    label.style.setProperty("--group", GROUP_COLORS[group.color] ?? GROUP_COLORS.gray);
+    label.textContent = `${group.label || "Группа"} · ${tabs.length}`;
+    label.setAttribute("aria-label", `Группа «${group.label || "без названия"}», действия`);
+  }
+}
+
 // Spaces bar: switch, create, delete. The browser for another space is its own process.
-const { NyxSpaces } = ChromeUtils.importESModule("chrome://nyx/content/NyxSpaces.sys.mjs");
+const { NyxSpaces, SPACE_COLORS } = ChromeUtils.importESModule("chrome://nyx/content/NyxSpaces.sys.mjs");
 const spacesBar = document.getElementById("spaces");
-const spacesState = { creating: false, confirming: null, error: "" };
+const spacesState = { creating: false, confirming: null, coloring: null, error: "" };
 
 function spaceButton(label, className, onClick, ariaLabel) {
   const button = document.createElement("button");
@@ -508,18 +772,52 @@ function confirmRow(space) {
   return row;
 }
 
+function colorRow(space) {
+  const row = document.createElement("span");
+  row.className = "space space-colors";
+  const pick = color => async () => {
+    try {
+      await NyxSpaces.setColor(space.id, color);
+      setSpacesState({ coloring: null });
+    } catch (error) {
+      console.error("NYX: can't set space color", error);
+      setSpacesState({ coloring: null, error: "Не получилось сменить цвет." });
+    }
+  };
+  for (const color of SPACE_COLORS) {
+    const swatch = spaceButton("", "space-swatch", pick(color), `Цвет ${color}`);
+    swatch.style.setProperty("--swatch", color);
+    if (color === space.color) swatch.setAttribute("aria-pressed", "true");
+    row.append(swatch);
+  }
+  row.append(
+    spaceButton("Без цвета", "space-action", pick(null)),
+    spaceButton("Готово", "space-action", () => setSpacesState({ coloring: null }))
+  );
+  return row;
+}
+
 async function renderSpaces() {
   const spaces = await NyxSpaces.list();
   const current = NyxSpaces.currentId;
-  const items = spaces.map(space => {
+  const items = spaces.map((space, index) => {
     if (spacesState.confirming === space.id) return confirmRow(space);
+    if (spacesState.coloring === space.id) return colorRow(space);
     const item = document.createElement("span");
-    item.className = "space";
+    item.className = space.temporary ? "space space-temp" : "space";
+    // The main space has no color, so its windows never get a strip.
+    if (space.id !== "default") {
+      const dot = spaceButton("", "space-dot", () => setSpacesState({ coloring: space.id, error: "" }),
+        `Цвет пространства «${space.name}»`);
+      if (space.color) dot.style.setProperty("--swatch", space.color);
+      item.append(dot);
+    }
     const open = spaceButton(space.name, "space-open", () => {
       if (space.id === current) return close();
       NyxSpaces.open(space.id).then(() => close(), console.error);
     });
     if (space.id === current) open.setAttribute("aria-current", "true");
+    if (index < 9) open.title = IS_WINDOWS ? `Alt+${index + 1}` : `⌃${index + 1}`;
     item.append(open);
     if (space.id !== current && space.id !== "default") {
       item.append(spaceButton("×", "space-remove",
@@ -532,7 +830,19 @@ async function renderSpaces() {
     items.push(input);
     queueMicrotask(() => input.focus());
   } else {
-    items.push(spaceButton("+ Пространство", "space-open space-new", () => setSpacesState({ creating: true, error: "" })));
+    items.push(
+      spaceButton("+ Пространство", "space-open space-new", () => setSpacesState({ creating: true, error: "" })),
+      spaceButton("+ Временное", "space-open space-new", async () => {
+        try {
+          const space = await NyxSpaces.createTemporary();
+          await NyxSpaces.open(space.id);
+          close();
+        } catch (error) {
+          console.error("NYX: can't create temporary space", error);
+          setSpacesState({ error: "Не получилось создать пространство." });
+        }
+      }, "Временное пространство: стирается целиком, когда его закроешь")
+    );
   }
   if (spacesState.error) {
     const error = document.createElement("span");
@@ -544,12 +854,163 @@ async function renderSpaces() {
   spacesBar.replaceChildren(...items);
 }
 
-function onKeyDown(event) {
-  if (event.target.matches?.(".space-input")) return;
-  if (event.key === "Escape" || (event.altKey && event.key === "Tab")) {
+// Side panels: the trash (auto-cleanup, last week) and snoozed tabs.
+const { NyxTrash } = ChromeUtils.importESModule("chrome://nyx/content/NyxTrash.sys.mjs");
+const sideBox = document.getElementById("trash");
+let openPanel = null; // "trash" | "snoozed" | null
+
+const hoursAgo = closedAt => {
+  const hours = Math.floor((Date.now() - closedAt) / 3600000);
+  if (hours < 1) return "только что";
+  return hours < 24 ? `${hours} ч назад` : `${Math.floor(hours / 24)} д назад`;
+};
+
+const returnsAt = until => new Date(until).toLocaleString("ru-RU", {
+  weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+});
+
+function panelRow(item, meta, onClick, ariaLabel) {
+  const row = document.createElement("li");
+  const button = spaceButton("", "trash-item", onClick, ariaLabel);
+  const title = document.createElement("span");
+  title.className = "trash-title";
+  title.textContent = item.title;
+  const detail = document.createElement("span");
+  detail.className = "trash-meta";
+  detail.textContent = `${new URL(item.url).host} · ${meta}`;
+  button.append(title, detail);
+  row.append(button);
+  return row;
+}
+
+// Brings a tab back in the background: its tile shows up here, and the overview stays open.
+const reopen = (store, item) => async () => {
+  const taken = await store.take(item.id);
+  if (taken) browserWindow.openTrustedLinkIn(taken.url, "tabshifted");
+  renderSide().catch(console.error);
+};
+
+async function renderSide() {
+  const [trash, snoozed] = await Promise.all([NyxTrash.list(), NyxSnooze.list()]);
+  const panels = [
+    { key: "snoozed", label: "Отложено", items: snoozed,
+      row: item => panelRow(item, `вернётся ${returnsAt(item.until)}`, reopen(NyxSnooze, item), `Вернуть сейчас «${item.title}»`) },
+    { key: "trash", label: "Корзина", items: trash,
+      row: item => panelRow(item, hoursAgo(item.closedAt), reopen(NyxTrash, item), `Вернуть «${item.title}»`) },
+  ].filter(panel => panel.items.length);
+  if (!panels.some(panel => panel.key === openPanel)) openPanel = null;
+
+  const toggles = document.createElement("div");
+  toggles.className = "side-toggles";
+  for (const panel of panels) {
+    const toggle = spaceButton(`${panel.label} · ${panel.items.length}`, "space-open trash-toggle", () => {
+      openPanel = openPanel === panel.key ? null : panel.key;
+      renderSide().catch(console.error);
+    });
+    toggle.setAttribute("aria-expanded", String(openPanel === panel.key));
+    toggles.append(toggle);
+  }
+  const children = panels.length ? [toggles] : [];
+  const shown = panels.find(panel => panel.key === openPanel);
+  if (shown) {
+    const list = document.createElement("ul");
+    list.className = "trash-list";
+    list.append(...shown.items.map(shown.row));
+    children.push(list);
+    if (shown.key === "trash") {
+      children.push(spaceButton("Очистить корзину", "space-action trash-clear", async () => {
+        await NyxTrash.clear();
+        renderSide().catch(console.error);
+      }));
+    }
+  }
+  sideBox.replaceChildren(...children);
+}
+
+// Search: typing anywhere dims the tiles that don't match.
+const searchInput = document.getElementById("search");
+const hint = document.getElementById("hint");
+
+function tabMatches(tab, query) {
+  if (!query) return true;
+  const url = tabUrl(browserWindow, tab) ?? "";
+  const group = tab.group?.label ?? "";
+  return [tab.label, url, group].some(text => text.toLowerCase().includes(query));
+}
+
+function applySearch() {
+  const query = searchInput.value.trim().toLowerCase();
+  for (const [tab, tile] of tiles) tile.classList.toggle("dim", !tabMatches(tab, query));
+  newTabTile.classList.toggle("dim", Boolean(query));
+  return query;
+}
+
+function firstMatch() {
+  const query = applySearch();
+  return currentTabs().find(tab => tabMatches(tab, query)) ?? null;
+}
+
+function startSearch(text) {
+  searchInput.hidden = false;
+  hint.hidden = true;
+  searchInput.value += text;
+  searchInput.focus();
+  const tab = firstMatch();
+  if (tab) centerOn(positions.get(tab));
+}
+
+function endSearch() {
+  searchInput.value = "";
+  searchInput.hidden = true;
+  hint.hidden = picked.size > 0;
+  applySearch();
+  focusTab(gBrowser.selectedTab);
+}
+
+searchInput.addEventListener("input", () => {
+  if (!searchInput.value) return endSearch();
+  const tab = firstMatch();
+  if (tab) centerOn(positions.get(tab));
+});
+searchInput.addEventListener("keydown", event => {
+  event.stopPropagation();
+  if (event.key === "Escape") {
+    event.preventDefault();
+    endSearch();
+  } else if (event.key === "Enter") {
+    event.preventDefault();
+    const tab = firstMatch();
+    if (tab) openTab(tab);
+  } else if (isHiveKey(event)) {
     event.preventDefault();
     close();
-  } else if (event.metaKey && event.code === "KeyW") {
+  }
+});
+
+// Letters and digits start a search. Symbols stay shortcuts (+ and − zoom).
+const SEARCH_START = /^[\p{L}\p{N}]$/u;
+
+function onKeyDown(event) {
+  if (event.target.matches?.(".space-input")) return;
+  if (event.key === "Escape" && !dialog.hidden) {
+    event.preventDefault();
+    closeDialog();
+    return;
+  }
+  if (event.key === "Escape" && picked.size) {
+    event.preventDefault();
+    clearPicks();
+    return;
+  }
+  if (SEARCH_START.test(event.key) && !event.metaKey && !event.ctrlKey && !event.altKey) {
+    event.preventDefault();
+    startSearch(event.key);
+    return;
+  }
+  if (event.key === "Escape" || isHiveKey(event)) {
+    event.preventDefault();
+    close();
+  } else if (event.getModifierState("Accel") && event.code === "KeyW") {
     // By key position, so it works on the Russian layout too. Stops the browser closing its own tab.
     event.preventDefault();
     event.stopPropagation();
@@ -581,3 +1042,4 @@ applyView();
 focusTab(gBrowser.selectedTab);
 applyView();
 renderSpaces().catch(console.error);
+renderSide().catch(console.error);

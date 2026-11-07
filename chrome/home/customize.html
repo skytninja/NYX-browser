@@ -25,6 +25,19 @@
         </label>
       </section>
 
+      <section id="home-background">
+        <h2>Фон домашней страницы</h2>
+        <p id="background-hint" class="hint">Фото природы со свободной лицензией или своя картинка: JPG, PNG, WebP или HEIC до 30 МБ.</p>
+        <div id="backgrounds" class="backgrounds"></div>
+        <input id="background-file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" hidden />
+        <label class="row spaced">
+          <span>Затемнение</span>
+          <input id="home-dim" type="range" min="0" max="70" step="5" />
+          <span id="home-dim-value" class="hint inline"></span>
+        </label>
+        <p id="background-error" class="error" role="alert"></p>
+      </section>
+
       <section>
         <h2>Вкладки</h2>
         <div id="tabs" class="options"></div>
@@ -32,7 +45,7 @@
 
       <section>
         <h2>Автоочистка вкладок</h2>
-        <p class="hint">Закреплённые, текущая и вкладки со звуком не закрываются. Вернуть закрытую: ⌘⇧T.</p>
+        <p class="hint">Закреплённые, текущая и вкладки со звуком не закрываются. Вернуть закрытую: <span class="reopen-key">⌘⇧T</span>.</p>
         <label class="row">
           <input id="tab-cleanup" type="checkbox" />
           <span>Закрывать вкладки, которые долго не открывались</span>
@@ -43,6 +56,38 @@
           <span>Предупреждать, когда вкладок больше</span>
           <input id="tab-limit" class="number" type="number" min="5" max="500" step="1" aria-label="Порог вкладок" />
         </label>
+      </section>
+
+      <section>
+        <h2>Сон вкладок</h2>
+        <p class="hint">Вкладка остаётся на месте, но выгружается из памяти и загрузится снова, когда её откроешь. Закреплённые и со звуком не засыпают.</p>
+        <label class="row">
+          <input id="tab-sleep" type="checkbox" />
+          <span>Усыплять вкладки, которые не открывались</span>
+        </label>
+        <div id="sleep-minutes" class="options spaced"></div>
+      </section>
+
+      <section id="focus">
+        <h2>Фокус</h2>
+        <p class="hint">Пока идёт фокус, эти сайты не открываются. По одному на строку, поддомены тоже попадают под запрет.</p>
+        <textarea id="focus-sites" class="sites" rows="5" placeholder="youtube.com&#10;vk.com" aria-label="Сайты для фокуса" spellcheck="false"></textarea>
+        <label class="row spaced">
+          <input id="focus-schedule" type="checkbox" />
+          <span>По расписанию</span>
+          <input id="focus-from" class="time" type="text" inputmode="numeric" maxlength="5" placeholder="09:00" aria-label="Начало фокуса, ЧЧ:ММ" />
+          <span>–</span>
+          <input id="focus-to" class="time" type="text" inputmode="numeric" maxlength="5" placeholder="18:00" aria-label="Конец фокуса, ЧЧ:ММ" />
+        </label>
+        <div id="focus-days" class="options spaced" aria-label="Дни фокуса"></div>
+        <label class="row spaced">
+          <input id="focus-hard-limit" type="checkbox" />
+          <span>Во время фокуса не открывать вкладки сверх порога из «Автоочистки»</span>
+        </label>
+        <div class="row spaced">
+          <button id="focus-now" class="option" type="button"></button>
+          <span id="focus-status" class="hint inline"></span>
+        </div>
       </section>
 
       <section>

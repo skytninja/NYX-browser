@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src chrome:; img-src chrome: data: page-icon: https:; object-src 'none'" />
+    <title>Команды</title>
+    <link rel="stylesheet" href="chrome://nyx/content/palette.css" />
+  </head>
+  <body>
+    <div id="backdrop"></div>
+    <section id="palette" role="dialog" aria-label="Команды">
+      <input id="query" type="text" autocomplete="off" spellcheck="false"
+             placeholder="Вкладка, сайт, команда или поиск"
+             role="combobox" aria-expanded="true" aria-controls="results" aria-autocomplete="list" />
+      <ul id="results" role="listbox" aria-label="Результаты"></ul>
+      <p id="footer">↑↓ выбрать · Enter открыть · Esc закрыть</p>
+    </section>
+    <script src="chrome://nyx/content/palette.js"></script>
+  </body>
+</html>

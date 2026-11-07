@@ -1,12 +1,21 @@
 // NYX appearance settings: stored in the profile, applied to the whole browser through a user stylesheet.
 
+import { BACKGROUNDS } from "chrome://nyx/content/NyxBackgrounds.sys.mjs";
+
 const SETTINGS_FILE = "nyx-theme.json";
+// The user's own home page picture, already converted to JPEG. Lives in the profile.
+export const CUSTOM_BACKGROUND_FILE = "nyx-home-background.jpg";
+export const HOME_DIM_RANGE = { min: 0, max: 70 };
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
 const ICON_DATA_URL = /^data:image\/(svg\+xml|png);base64,[A-Za-z0-9+/=]+$/;
 const PACKS = ["default", "sharp", "bold"];
 const TAB_POSITIONS = ["top", "left"];
 export const CLEANUP_HOURS = [1, 5, 24, 24 * 7, 24 * 30];
 export const TAB_LIMIT_RANGE = { min: 5, max: 500 };
+export const SLEEP_MINUTES = [10, 30, 60, 180];
+export const MAX_FOCUS_SITES = 100;
+const FOCUS_SITE = /^[a-z0-9-]+(\.[a-z0-9-]+)+$/;
+const CLOCK = /^([01]\d|2[0-3]):[0-5]\d$/;
 const METAL_GRADIENT =
   "linear-gradient(135deg, #f4f4f4 0%, #c8c8c8 22%, #8c8c8c 40%, #efefef 55%, #b4b4b4 75%, #dcdcdc 100%)";
 const METAL_FILTER = 'url("chrome://nyx/content/metal.svg#metal")';
@@ -75,6 +84,22 @@ const DEFAULTS = {
   tabWarning: true,
   tabLimit: 20,
   updateCheck: true,
+  tabSleep: true,
+  sleepMinutes: 30,
+  focusSites: [],
+  focusSchedule: false,
+  focusDays: [1, 2, 3, 4, 5],
+  focusFrom: "09:00",
+  focusTo: "18:00",
+  focusHardLimit: false,
+  // Manual "focus for an hour": end time in ms, 0 when off.
+  focusUntil: 0,
+  // "none" (black), a bundled background's id, or "custom".
+  homeBackground: "none",
+  // Darkening over the picture, in percent, so pinned tiles stay readable.
+  homeDim: 30,
+  // Changes with every new custom picture, so the page doesn't show a cached old one.
+  homeCustomVersion: 0,
 };
 
 const sheetService = Cc["@mozilla.org/content/style-sheet-service;1"].getService(Ci.nsIStyleSheetService);
@@ -106,6 +131,27 @@ function clean(raw) {
     settings.tabLimit = raw.tabLimit;
   }
   if (typeof raw.updateCheck === "boolean") settings.updateCheck = raw.updateCheck;
+  if (typeof raw.tabSleep === "boolean") settings.tabSleep = raw.tabSleep;
+  if (SLEEP_MINUTES.includes(raw.sleepMinutes)) settings.sleepMinutes = raw.sleepMinutes;
+  if (Array.isArray(raw.focusSites)) {
+    settings.focusSites = [...new Set(raw.focusSites.filter(site => typeof site === "string" && FOCUS_SITE.test(site)))]
+      .slice(0, MAX_FOCUS_SITES);
+  }
+  if (typeof raw.focusSchedule === "boolean") settings.focusSchedule = raw.focusSchedule;
+  if (Array.isArray(raw.focusDays)) {
+    settings.focusDays = [...new Set(raw.focusDays.filter(day => Number.isInteger(day) && day >= 0 && day <= 6))].sort();
+  }
+  if (CLOCK.test(raw.focusFrom)) settings.focusFrom = raw.focusFrom;
+  if (CLOCK.test(raw.focusTo)) settings.focusTo = raw.focusTo;
+  if (typeof raw.focusHardLimit === "boolean") settings.focusHardLimit = raw.focusHardLimit;
+  if (Number.isFinite(raw.focusUntil) && raw.focusUntil >= 0) settings.focusUntil = raw.focusUntil;
+  if (raw.homeBackground === "none" || raw.homeBackground === "custom" || BACKGROUNDS.some(each => each.id === raw.homeBackground)) {
+    settings.homeBackground = raw.homeBackground;
+  }
+  if (Number.isInteger(raw.homeDim) && raw.homeDim >= HOME_DIM_RANGE.min && raw.homeDim <= HOME_DIM_RANGE.max) {
+    settings.homeDim = raw.homeDim;
+  }
+  if (Number.isSafeInteger(raw.homeCustomVersion) && raw.homeCustomVersion >= 0) settings.homeCustomVersion = raw.homeCustomVersion;
   return settings;
 }
 
@@ -118,6 +164,27 @@ function load() {
     console.error("NYX: theme settings unreadable, using defaults", error);
     return structuredClone(DEFAULTS);
   }
+}
+
+// The picture's address for CSS. Only a known id or our own profile file can end up here.
+function homeImage({ homeBackground, homeCustomVersion }) {
+  if (homeBackground === "custom") {
+    const file = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    file.append(CUSTOM_BACKGROUND_FILE);
+    return file.exists() ? `${Services.io.newFileURI(file).spec}?v=${homeCustomVersion}` : null;
+  }
+  return BACKGROUNDS.some(each => each.id === homeBackground) ? `chrome://nyx/content/backgrounds/${homeBackground}.jpg` : null;
+}
+
+function homeRules(settings) {
+  const image = homeImage(settings);
+  if (!image) return "";
+  const dim = settings.homeDim / 100;
+  return `@-moz-document url("chrome://nyx/content/home.html") {
+  :root { background: #000 url("${image}") center / cover no-repeat fixed !important; }
+  body { background: transparent !important; }
+  body::before { content: ""; position: fixed; inset: 0; z-index: -1; background: rgb(0 0 0 / ${dim}); }
+}`;
 }
 
 function buildSheet(settings) {
@@ -147,7 +214,8 @@ function buildSheet(settings) {
 @-moz-document url("chrome://browser/content/browser.xhtml") {
   ${icons.join("\n  ")}
   ${tabs === "top" ? "#sidebar-container { display: none !important; }" : ""}
-}`;
+}
+${homeRules(settings)}`;
 }
 
 let current = load();

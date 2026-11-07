@@ -53,7 +53,7 @@ body.closing #viewport {
   height: 277px;
   clip-path: var(--hex);
   background: var(--nyx-border, #333);
-  transition: background-color var(--speed) ease-out, transform var(--speed) ease-out;
+  transition: background-color var(--speed) ease-out, transform var(--speed) ease-out, opacity var(--speed) ease-out;
 }
 
 .tile:hover,
@@ -63,6 +63,19 @@ body.closing #viewport {
 
 .tile.active {
   background: var(--nyx-tab-selected-fill, #d8d8d8);
+}
+
+/* A group's color is the hexagon's edge. The current tab stays metal even inside a group. */
+.tile.grouped:not(.active) {
+  background: var(--group);
+}
+
+.tile.picked {
+  background: var(--nyx-text, #ededed);
+}
+
+.tile.picked .tile-open {
+  opacity: 0.85;
 }
 
 .tile.dragging {
@@ -134,7 +147,8 @@ body.closing #viewport {
   color: var(--nyx-text, #ededed);
 }
 
-.tile-close {
+.tile-close,
+.tile-snooze {
   all: unset;
   position: absolute;
   top: 34px;
@@ -152,12 +166,26 @@ body.closing #viewport {
 }
 
 .tile:hover .tile-close,
-.tile:focus-within .tile-close {
+.tile:focus-within .tile-close,
+.tile:hover .tile-snooze,
+.tile:focus-within .tile-snooze {
   opacity: 1;
 }
 
+/* Side by side at the top of the hexagon. */
+.tile-close {
+  margin-left: -31px;
+}
+
+.tile-snooze {
+  margin-left: 3px;
+  font-size: 14px;
+}
+
 .tile-close:hover,
-.tile-close:focus-visible {
+.tile-close:focus-visible,
+.tile-snooze:hover,
+.tile-snooze:focus-visible {
   background: var(--nyx-accent, #d8d8d8);
   color: #0a0a0a;
 }
@@ -189,7 +217,8 @@ body.closing #viewport {
   /* Below the macOS window buttons. */
   top: 44px;
   left: 16px;
-  right: 16px;
+  /* Leaves room for the trash on the right. */
+  right: 200px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -267,6 +296,239 @@ body.closing #viewport {
   padding: 6px 10px;
   background: var(--nyx-bg, #000);
   color: #ff8a80;
+}
+
+.space-dot,
+.space-swatch {
+  all: unset;
+  width: 12px;
+  height: 12px;
+  margin-left: 10px;
+  border: 1px solid var(--nyx-border, #333);
+  border-radius: 50%;
+  background: var(--swatch, transparent);
+  cursor: pointer;
+}
+
+.space-swatch {
+  width: 18px;
+  height: 18px;
+  margin: 0 2px;
+}
+
+.space-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--nyx-text, #ededed);
+  outline-offset: 2px;
+}
+
+.space-colors {
+  gap: 4px;
+  padding-left: 8px;
+}
+
+.space-dot:focus-visible,
+.space-swatch:focus-visible {
+  outline: 2px solid var(--nyx-accent, #d8d8d8);
+  outline-offset: 2px;
+}
+
+#trash {
+  position: fixed;
+  top: 44px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-height: calc(100vh - 120px);
+}
+
+.trash-toggle {
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+}
+
+.trash-list {
+  width: min(360px, calc(100vw - 32px));
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+  list-style: none;
+}
+
+.trash-item {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color var(--speed) ease-out;
+}
+
+.trash-item:hover,
+.trash-item:focus-visible {
+  background: var(--nyx-hover, #2a2a2a);
+}
+
+.trash-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.trash-meta {
+  color: var(--nyx-muted, #a8a8a8);
+  font-size: 12px;
+}
+
+.trash-clear {
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+}
+
+#search {
+  position: fixed;
+  right: 0;
+  bottom: 18px;
+  left: 0;
+  width: min(420px, calc(100vw - 32px));
+  min-height: 36px;
+  margin: 0 auto;
+  padding: 0 12px;
+  border: 1px solid var(--nyx-accent, #d8d8d8);
+  background: var(--nyx-surface, #101010);
+  color: var(--nyx-text, #ededed);
+  font: inherit;
+}
+
+#search:focus-visible {
+  /* The accent border already shows focus. */
+  outline: none;
+}
+
+#search[hidden],
+#hint[hidden] {
+  display: none;
+}
+
+.tile.dim {
+  opacity: 0.15;
+}
+
+.tile-memory {
+  color: var(--nyx-muted, #a8a8a8);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tile-memory:empty {
+  display: none;
+}
+
+.tile.heavy .tile-memory {
+  color: #ff8a80;
+}
+
+/* Asleep: unloaded from memory, waits in place. */
+.tile.asleep .tile-shot,
+.tile.asleep .tile-icon {
+  filter: grayscale(1) brightness(0.55);
+}
+
+.space-temp {
+  border-style: dashed;
+}
+
+.side-toggles {
+  display: flex;
+  gap: 8px;
+}
+
+#snooze {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: min(320px, calc(100vw - 32px));
+  padding: 16px;
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 0.8);
+  transform: translate(-50%, -50%);
+}
+
+#snooze[hidden] {
+  display: none;
+}
+
+.snooze-title,
+.snooze-note {
+  margin: 0 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.snooze-note {
+  color: var(--nyx-muted, #a8a8a8);
+}
+
+.snooze-choice {
+  text-align: left;
+}
+
+.cluster-label {
+  all: unset;
+  position: absolute;
+  z-index: 1;
+  padding: 3px 12px;
+  border: 1px solid var(--group);
+  background: var(--nyx-bg, #000);
+  color: var(--group);
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: background-color var(--speed) ease-out, color var(--speed) ease-out;
+}
+
+.cluster-label:hover,
+.cluster-label:focus-visible {
+  background: var(--group);
+  color: #0a0a0a;
+}
+
+#group-bar {
+  position: fixed;
+  right: 0;
+  bottom: 18px;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  max-width: calc(100vw - 32px);
+  margin: 0 auto;
+  padding: 8px 10px;
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+}
+
+#group-bar[hidden] {
+  display: none;
+}
+
+.group-count {
+  padding: 0 6px;
+  color: var(--nyx-muted, #a8a8a8);
 }
 
 @keyframes viewport-in {

@@ -13,6 +13,13 @@ from pathlib import Path
 BROWSER_DIR = Path(sys.argv[1])
 TOOLKIT_DIR = Path(sys.argv[2])
 REPO = Path(sys.argv[3])
+# "mac" or "win": decides the keyboard shortcuts. On Windows ⌥Tab belongs to the system
+# and Ctrl+digit switches tabs, so the hive and spaces get other keys there.
+PLATFORM = sys.argv[4] if len(sys.argv) > 4 else "mac"
+HIVE_KEY = ('<key id="key_nyxHive" keycode="VK_TAB" modifiers="alt" reserved="true"/>' if PLATFORM == "mac"
+            else '<key id="key_nyxHive" keycode="VK_SPACE" modifiers="control" reserved="true"/>')
+HIVE_HINT = "⌥Tab" if PLATFORM == "mac" else "Ctrl+Space"
+SPACE_MODIFIER = "control" if PLATFORM == "mac" else "alt"
 
 LOGO = REPO / "branding/generated/logo.svg"
 WORDMARK = REPO / "branding/wordmark.svg"
@@ -70,9 +77,16 @@ WINDOW_ADDITIONS = [
      '<toolbarbutton id="appMenu-nyx-hive" class="subviewbutton" label="Соты" key="key_nyxHive"/>\n      '
      '<toolbarbutton id="appMenu-nyx-customize" class="subviewbutton" label="Кастомизация"/>\n      '),
     ('<toolbaritem id="PanelUI-button"',
-     '<toolbarbutton id="nyx-hive-button" class="toolbarbutton-1" removable="false" tooltiptext="Соты (⌥Tab)"/>\n    '),
+     f'<toolbarbutton id="nyx-hive-button" class="toolbarbutton-1" removable="false" tooltiptext="Соты ({HIVE_HINT})"/>\n    '),
     ('<key id="key_newNavigatorTab"',
-     '<key id="key_nyxHive" keycode="VK_TAB" modifiers="alt" reserved="true"/>\n    '),
+     HIVE_KEY + '\n    '
+     + "".join(f'<key id="key_nyxSpace{n}" key="{n}" modifiers="{SPACE_MODIFIER}" reserved="true"/>\n    ' for n in range(1, 10))),
+]
+
+# ⌘K opens NYX's command palette instead of jumping to the web search field.
+WINDOW_REPLACEMENTS = [
+    ('<key id="key_search" data-l10n-id="search-focus-shortcut" command="Tools:Search" modifiers="accel"/>',
+     '<key id="key_nyxPalette" key="K" modifiers="accel" reserved="true"/>'),
 ]
 
 SETTINGS_GROUPS_OLD = re.compile(
@@ -238,6 +252,10 @@ def add_home():
         if anchor not in text:
             sys.exit(f"patch_omni: {anchor} not found, Firefox layout changed")
         text = text.replace(anchor, addition + anchor, 1)
+    for original, replacement in WINDOW_REPLACEMENTS:
+        if original not in text:
+            sys.exit(f"patch_omni: {original} not found, Firefox layout changed")
+        text = text.replace(original, replacement, 1)
     window.write_text(text, encoding="utf-8")
 
 

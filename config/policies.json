@@ -71,7 +71,8 @@
     "ExtensionSettings": {
       "uBlock0@raymondhill.net": {
         "installation_mode": "force_installed",
-        "install_url": "file:///Applications/NYX%20Browser.app/Contents/Resources/distribution/extensions/uBlock0@raymondhill.net.xpi"
+        "install_url": "file:///Applications/NYX%20Browser.app/Contents/Resources/distribution/extensions/uBlock0@raymondhill.net.xpi",
+        "default_area": "navbar"
       }
     }
   }

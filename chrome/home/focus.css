@@ -1,0 +1,60 @@
+:root {
+  color-scheme: dark;
+  font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+}
+
+body {
+  display: grid;
+  min-height: 100vh;
+  margin: 0;
+  place-items: center;
+  background: var(--nyx-bg, #000);
+  color: var(--nyx-text, #ededed);
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 28em;
+  padding: 16px;
+  text-align: center;
+}
+
+.hex {
+  width: 52px;
+  height: 60px;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: var(--nyx-tab-selected-fill, #d8d8d8);
+}
+
+h1 {
+  margin: 24px 0 8px;
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+p {
+  margin: 0 0 28px;
+  color: var(--nyx-muted, #a8a8a8);
+  text-wrap: pretty;
+}
+
+button {
+  all: unset;
+  padding: 10px 18px;
+  border: 1px solid var(--nyx-border, #333);
+  background: var(--nyx-surface, #101010);
+  cursor: pointer;
+  transition: background-color 160ms ease-out;
+}
+
+button:hover {
+  background: var(--nyx-hover, #2a2a2a);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--nyx-accent, #d8d8d8);
+  outline-offset: 2px;
+}

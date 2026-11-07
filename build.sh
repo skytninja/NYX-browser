@@ -1,20 +1,11 @@
 #!/bin/bash
 # Builds dist/NYX Browser.app and a .dmg from the official Firefox release.
-# Versions are pinned on purpose: bump them by hand and retest, our changes can break on updates.
 set -euo pipefail
 
-# NYX's own version: bump it for every release. Users are told about it through docs/latest.json.
-NYX_VERSION="1.0.0"
-FF_VERSION="159.0"
-FF_LOCALE="en-US"
-FF_SHA256="0772404ae6e068d7cc03cecf4bb06a855f10287a77b624ffa41c6d092a64ea13"
-UBLOCK_VERSION="1.75.4"
-UBLOCK_SHA256="e2df503cce7cf5069130618c349695f62bdddb9eb8c189156d027269ae4ae267"
-
-APP_NAME="NYX Browser"
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+source "$ROOT/versions.sh"
 BUNDLE_ID="org.nyx.browser"
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
 CACHE="$ROOT/.cache"
 WORK="$ROOT/.build"
 DIST="$ROOT/dist"
@@ -88,43 +79,7 @@ iconutil -c icns "$BRANDING/nyx.iconset" -o "$RES/firefox.icns"
 cp "$RES/firefox.icns" "$RES/document.icns"
 
 log "Rebranding omni.ja"
-OMNI="$WORK/omni"
-OMNI_TOOLKIT="$WORK/omni-toolkit"
-mkdir -p "$OMNI" "$OMNI_TOOLKIT"
-# Firefox's omni.ja has a non-standard layout: unzip warns and exits 1-2 but extracts correctly.
-unzip -qq "$RES/browser/omni.ja" -d "$OMNI" 2>/dev/null || [ $? -le 2 ]
-unzip -qq "$RES/omni.ja" -d "$OMNI_TOOLKIT" 2>/dev/null || [ $? -le 2 ]
-python3 -I "$ROOT/branding/patch_omni.py" "$OMNI" "$OMNI_TOOLKIT" "$ROOT"
-BRAND_FTL="$OMNI/localization/$FF_LOCALE/branding/brand.ftl"
-BRAND_PROPS="$OMNI/chrome/$FF_LOCALE/locale/branding/brand.properties"
-BRAND_DIR="$OMNI/chrome/browser/content/branding"
-[ -f "$BRAND_FTL" ] && [ -f "$BRAND_PROPS" ] && [ -d "$BRAND_DIR" ] || { echo "omni.ja layout changed" >&2; exit 1; }
-cat > "$BRAND_FTL" <<EOF
--brand-shorter-name = NYX
--brand-short-name = NYX Browser
--brand-shortcut-name = NYX Browser
--brand-full-name = NYX Browser
--brand-product-name = NYX Browser
--vendor-short-name = NYX
-trademarkInfo = { "" }
-EOF
-cat > "$BRAND_PROPS" <<EOF
-brandShorterName=NYX
-brandShortName=NYX Browser
-brandFullName=NYX Browser
-EOF
-for px in 16 32 48 64 128; do cp "$BRANDING/logo$px.png" "$BRAND_DIR/icon$px.png"; done
-cp "$BRANDING/logo210.png" "$BRAND_DIR/about-logo.png"
-cp "$BRANDING/logo420.png" "$BRAND_DIR/about-logo@2x.png"
-cp "$BRANDING/logo210.png" "$BRAND_DIR/about-logo-private.png"
-cp "$BRANDING/logo420.png" "$BRAND_DIR/about-logo-private@2x.png"
-cp "$BRANDING/logo210.png" "$BRAND_DIR/about.png"
-cp "$BRANDING/logo.svg" "$BRAND_DIR/about-logo.svg"
-cp "$BRANDING/document.ico" "$BRAND_DIR/document.ico"
-rm "$RES/browser/omni.ja" "$RES/omni.ja"
-(cd "$OMNI" && zip -qr9XD "$RES/browser/omni.ja" .)
-(cd "$OMNI_TOOLKIT" && zip -qr9XD "$RES/omni.ja" .)
-rm -rf "$OMNI" "$OMNI_TOOLKIT"
+"$ROOT/branding/brand_omni.sh" "$RES" mac "$WORK"
 
 log "Adding config and uBlock Origin"
 mkdir -p "$RES/defaults/pref" "$RES/distribution/extensions"
