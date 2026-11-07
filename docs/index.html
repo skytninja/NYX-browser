@@ -30,10 +30,15 @@
           Вкладки в сотах, отдельные пространства и тема, которую можно перекрасить целиком.
         </p>
         <div class="cta">
-          <a class="button" id="download-button" href="https://github.com/skytninja/NYX-browser/releases/latest">
-            Скачать для macOS
-          </a>
-          <p class="meta" id="download-meta">macOS 10.15 и новее · Apple Silicon и Intel</p>
+          <div class="downloads" id="downloads">
+            <a class="button" id="download-button" href="https://github.com/skytninja/NYX-browser/releases/latest">
+              Скачать для macOS
+            </a>
+            <a class="button secondary" id="download-win" href="https://github.com/skytninja/NYX-browser/releases/latest">
+              Скачать для Windows
+            </a>
+          </div>
+          <p class="meta" id="download-meta">macOS 10.15+ · Apple Silicon и Intel &nbsp;·&nbsp; Windows 10 и 11 · x64</p>
         </div>
       </section>
 
@@ -55,7 +60,7 @@
         <article>
           <span class="hex" aria-hidden="true"></span>
           <h2>Соты</h2>
-          <p>Все вкладки шестиугольниками на бесконечном поле. Перетаскивай, группируй, закрывай. Открываются по ⌥Tab.</p>
+          <p>Все вкладки шестиугольниками на бесконечном поле. Перетаскивай, группируй, закрывай. Открываются по ⌥Tab, на Windows по Ctrl+Space.</p>
         </article>
         <article>
           <span class="hex" aria-hidden="true"></span>
@@ -76,6 +81,7 @@
 
       <section class="install" id="download">
         <h2>Установка и обновление</h2>
+        <h3 class="platform">macOS</h3>
         <ol>
           <li>
             <strong>Скачай</strong> файл <code>.dmg</code> по кнопке выше и открой его.
@@ -91,6 +97,25 @@
           <li>
             <strong>Разреши запуск.</strong> NYX пока не подписан сертификатом Apple, поэтому при первом запуске macOS его остановит.
             Открой «Системные настройки» → «Конфиденциальность и безопасность» и нажми «Всё равно открыть».
+          </li>
+        </ol>
+        <h3 class="platform">Windows</h3>
+        <ol>
+          <li>
+            <strong>Скачай</strong> установщик <code>.exe</code> по кнопке выше и запусти его.
+            <span class="checksum" id="checksum-win" hidden>
+              Убедиться, что файл настоящий: команда
+              <code>Get-FileHash $env:USERPROFILE\Downloads\NYX-Browser-Setup-*.exe</code>
+              в PowerShell должна вывести <code class="hash" id="sha256-win"></code>
+            </span>
+          </li>
+          <li>
+            <strong>Разреши запуск.</strong> NYX пока не подписан сертификатом, поэтому Windows может показать синее окно SmartScreen.
+            Нажми «Подробнее» → «Выполнить в любом случае».
+          </li>
+          <li>
+            <strong>Установи.</strong> Права администратора не нужны. Для обновления просто запусти новый установщик,
+            закрыв NYX: вкладки, пароли и настройки останутся на месте.
           </li>
         </ol>
         <p class="note">Когда выйдет новая версия, NYX сам покажет об этом полоску сверху.</p>

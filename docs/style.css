@@ -118,6 +118,24 @@ h1 {
   transition: transform 160ms ease-out, box-shadow 160ms ease-out;
 }
 
+.downloads {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* The other platform's button: same size, quieter. */
+.button.secondary {
+  background: transparent;
+  color: var(--text);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.28) inset;
+}
+
+.button.secondary:hover {
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.55) inset;
+}
+
 .button:hover {
   transform: translateY(-1px);
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.5) inset, 0 14px 48px rgb(255 255 255 / 0.2);
@@ -200,6 +218,17 @@ a:focus-visible {
   margin: 0 0 28px;
   font-size: clamp(28px, 4vw, 40px);
   letter-spacing: -0.02em;
+}
+
+.install .platform {
+  margin: 0 0 18px;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+.install ol + .platform {
+  margin-top: 18px;
 }
 
 .install ol {
