@@ -4,5 +4,8 @@
   "date": "2026-11-08",
   "dmg": "https://github.com/skytninja/NYX-browser/releases/download/v1.1.0/NYX-Browser-1.1.0.dmg",
   "size": 249907569,
-  "sha256": "09808d2d20764e5d3d080160508b761391a441e743a2772828f45607571d3919"
+  "sha256": "09808d2d20764e5d3d080160508b761391a441e743a2772828f45607571d3919",
+  "exe": "https://github.com/skytninja/NYX-browser/releases/download/v1.1.0/NYX-Browser-Setup-1.1.0.exe",
+  "exe_size": 131822332,
+  "exe_sha256": "4ba6929bb86f3c73b084389b266f84db336e29e2dc8cf157bf17abfbbf677a65"
 }
